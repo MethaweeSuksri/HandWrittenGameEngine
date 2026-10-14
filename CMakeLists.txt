@@ -19,7 +19,7 @@ glad_add_library(glad
 )
 
 # Create your game executable target as usual
-add_executable(hello WIN32 hello.c)
+add_executable(hello WIN32 hello.cpp)
 
 # Link to the actual SDL3 library and GLAD.
 target_link_libraries(hello PRIVATE
