@@ -1,3 +1,7 @@
 [submodule "SDL"]
 	path = vendored/SDL
 	url = https://github.com/libsdl-org/SDL
+[submodule "vendored/glad"]
+	path = vendored/glad
+	url = https://github.com/Dav1dde/glad.git
+	branch = glad2

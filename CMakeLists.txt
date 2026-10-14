@@ -6,11 +6,23 @@ project(hello)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 
-# This assumes the SDL source is available in vendored/SDL
+# SDL3
 add_subdirectory(vendored/SDL EXCLUDE_FROM_ALL)
+
+# GLAD
+add_subdirectory(vendored/glad/cmake)
+
+# tell GLAD what to generate
+glad_add_library(glad
+    STATIC
+    API gl:core=3.3
+)
 
 # Create your game executable target as usual
 add_executable(hello WIN32 hello.c)
 
-# Link to the actual SDL3 library.
-target_link_libraries(hello PRIVATE SDL3::SDL3)
+# Link to the actual SDL3 library and GLAD.
+target_link_libraries(hello PRIVATE
+    SDL3::SDL3
+    glad
+)
