@@ -3,13 +3,26 @@
 #include <SDL3/SDL_main.h>
 #include <iostream>
 
+SDL_Window *mainWindow = nullptr;
+
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
 
-    /* Create the window */
-    if (!SDL_CreateWindow("Hello World", 800, 600, 0)) {
-        SDL_Log("Couldn't create window and renderer: %s", SDL_GetError());
+    if ( !SDL_Init( SDL_INIT_VIDEO ) ){
+        SDL_Log("Fail to initialize SDL video subsystem: %s", SDL_GetError());
+        return  SDL_APP_FAILURE;
+    }
+
+    // Create the window
+    mainWindow = SDL_CreateWindow(
+        "Hello World",
+         800, 600,
+         SDL_WINDOW_RESIZABLE ); 
+
+    if ( !mainWindow ) {
+        SDL_Log("Fail to create window: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
+    
     return SDL_APP_CONTINUE;
 }
 
@@ -20,8 +33,11 @@ SDL_AppResult SDL_AppIterate(void *appstate){
 
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event){
     
-    if (event->type == SDL_EVENT_QUIT)
-        return SDL_APP_SUCCESS;
+    switch( event->type ){
+        case SDL_EVENT_QUIT:
+            SDL_Log("Quitting..... ");
+            return SDL_APP_SUCCESS;
+    }
 
     return SDL_APP_CONTINUE;
 }
