@@ -3,7 +3,10 @@
 #include <SDL3/SDL_main.h>
 #include <iostream>
 
-SDL_Window *mainWindow = nullptr;
+static SDL_Window *mainWindow = nullptr;
+static SDL_Renderer *mainRenderer = nullptr;
+static SDL_Surface *surface = nullptr;
+static SDL_Texture *texture = nullptr;
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
 
@@ -15,22 +18,42 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
         return  SDL_APP_FAILURE;
     }
 
-    // Create the window
-    mainWindow = SDL_CreateWindow(
-        "Hello World",
-         800, 600,
-         SDL_WINDOW_RESIZABLE ); 
-
-    if ( !mainWindow ) {
-        SDL_LogError( SDL_LOG_CATEGORY_APPLICATION, "Fail to create window: %s", SDL_GetError());
+    if ( !SDL_CreateWindowAndRenderer(
+            "Hello World",
+            800, 600,
+            SDL_WINDOW_RESIZABLE,
+            &mainWindow,
+            &mainRenderer ) ) {
+        SDL_LogError( SDL_LOG_CATEGORY_APPLICATION, "Fail to create window/renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
+
+    surface = SDL_LoadPNG("./build/ME.png");
+    if (!surface) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create surface from image: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+
+    texture = SDL_CreateTextureFromSurface(mainRenderer, surface);
+
+    if (!texture) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create texture from surface: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+
+    SDL_DestroySurface(surface);
     
     return SDL_APP_CONTINUE;
 }
 
 
 SDL_AppResult SDL_AppIterate(void *appstate){
+    
+    SDL_SetRenderDrawColor(mainRenderer, 0x00, 0x00, 0x00, 0x00);
+    SDL_RenderClear(mainRenderer);
+    SDL_RenderTexture(mainRenderer, texture, NULL, NULL);
+    SDL_RenderPresent(mainRenderer);
+    
     return SDL_APP_CONTINUE;
 }
 
