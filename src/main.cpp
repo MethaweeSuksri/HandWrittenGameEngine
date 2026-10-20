@@ -8,6 +8,8 @@ static SDL_Renderer *mainRenderer = nullptr;
 static SDL_Surface *surface = nullptr;
 static SDL_Texture *texture = nullptr;
 
+static int windowWidth = 800, windowHeight = 600;
+
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
 
     // Set Priority for all category 
@@ -20,8 +22,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
 
     if ( !SDL_CreateWindowAndRenderer(
             "Hello World",
-            800, 600,
-            SDL_WINDOW_RESIZABLE,
+            windowWidth, windowHeight,
+            SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL,
             &mainWindow,
             &mainRenderer ) ) {
         SDL_LogError( SDL_LOG_CATEGORY_APPLICATION, "Fail to create window/renderer: %s", SDL_GetError());
@@ -49,7 +51,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
 
 SDL_AppResult SDL_AppIterate(void *appstate){
     
-    SDL_SetRenderDrawColor(mainRenderer, 0x00, 0x00, 0x00, 0x00);
+    SDL_SetRenderDrawColor(mainRenderer, 0xF0, 0xF0, 0x00, 0xFF);
     SDL_RenderClear(mainRenderer);
     SDL_RenderTexture(mainRenderer, texture, NULL, NULL);
     SDL_RenderPresent(mainRenderer);
@@ -60,6 +62,17 @@ SDL_AppResult SDL_AppIterate(void *appstate){
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event){
     
     switch( event->type ){
+        
+        case SDL_EVENT_MOUSE_MOTION:
+            SDL_LogDebug( SDL_LOG_CATEGORY_APPLICATION, "mouse" );
+            
+            break;
+        case SDL_EVENT_WINDOW_RESIZED:
+
+            SDL_GetWindowSize( mainWindow, &windowWidth, &windowHeight );
+            SDL_LogDebug( SDL_LOG_CATEGORY_APPLICATION, "   (%d %d) ", windowWidth, windowHeight );
+            
+            break;
         case SDL_EVENT_QUIT:
             SDL_LogDebug( SDL_LOG_CATEGORY_APPLICATION, " EVENT QUIT " );
 
