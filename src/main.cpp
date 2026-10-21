@@ -25,7 +25,7 @@ bool SetGLAttribute( int majorVersion = 3, int minorVersion = 3 ){
         return true;
     }
     catch( const std::runtime_error& e ){
-        SDL_LogError( SDL_LOG_CATEGORY_APPLICATION, "Fail to set GL Attribute");
+        SDL_LogError( SDL_LOG_CATEGORY_VIDEO, "Fail to set GL Attribute");
         return false;
     }
 }
@@ -34,6 +34,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
 
     // Set Priority for all category 
     SDL_SetLogPriority( SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_DEBUG );
+    SDL_SetLogPriority( SDL_LOG_CATEGORY_VIDEO, SDL_LOG_PRIORITY_DEBUG );
 
     if ( !SDL_Init( SDL_INIT_VIDEO ) ){
         SDL_LogError( SDL_LOG_CATEGORY_APPLICATION, "Fail to initialize SDL video subsystem: %s", SDL_GetError());
@@ -65,7 +66,12 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
         return SDL_APP_FAILURE;
     }
 
-    // TODO : usually this will be autometically after context creation. but do test this
+    if (!gladLoadGL( (GLADloadfunc)SDL_GL_GetProcAddress )){
+        SDL_LogError( SDL_LOG_CATEGORY_VIDEO, "Failed to initialize GLAD: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+
+    // usually this will be autometically after context creation. seem to be true after tested
     SDL_GL_MakeCurrent( mainWindow, mainContext );
     
     // Enable Vsync
