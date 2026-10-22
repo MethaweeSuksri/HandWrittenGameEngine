@@ -6,11 +6,44 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
+#include <vector>
+
+#include "Mesh.h"
 
 static SDL_Window *mainWindow = nullptr;
 static SDL_GLContext mainContext = nullptr; 
 
 static int windowWidth = 800, windowHeight = 600;
+
+static std::vector<float> vertices = {
+     0.5f,   0.5f,  0.0f,  // top right
+     0.5f,  -0.5f,  0.0f,  // bottom right
+    -0.5f,  -0.5f,  0.0f,  // bottom left
+    -0.5f,   0.5f,  0.0f   // top left 
+};
+
+static std::vector<unsigned int> indices = {  // note that we start from 0!
+    0, 1, 3,  // first Triangle
+    1, 2, 3   // second Triangle
+};
+
+Mesh* myMesh;
+
+static unsigned int shaderProgram;
+
+static const char *vertexShaderSource = "#version 450 core\n"
+    "layout (location = 0) in vec3 aPos;\n"
+    "void main()\n"
+    "{\n"
+    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    "}\0";
+
+static const char *fragmentShaderSource ="#version 450 core\n"
+    "out vec4 FragColor;\n"
+    "void main()\n"
+    "{\n"
+    "    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+    "}\0";
 
 bool SetGLAttribute( int majorVersion = 3, int minorVersion = 3 ){
     try {
@@ -70,19 +103,84 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
         SDL_LogError( SDL_LOG_CATEGORY_VIDEO, "Failed to initialize GLAD: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
+    
+    glDisable(GL_CULL_FACE);
+    glViewport(0, 0, windowWidth, windowHeight );
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
-    // usually this will be autometically after context creation. seem to be true after tested
-    SDL_GL_MakeCurrent( mainWindow, mainContext );
+    // usually this will be autometically after context creation.
+    // seem to be true after tested
+    // SDL_GL_MakeCurrent( mainWindow, mainContext );
     
     // Enable Vsync
     // TODO : read ts too
     SDL_GL_SetSwapInterval(1); // 1 = on, 0 = off, -1 = adaptive 
+
+    myMesh = new Mesh( vertices, indices );
+
+    unsigned int vertexShader;
+    vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glCompileShader(vertexShader);
+
+    // check if shader compilation success
+
+    int  success;
+    char infoLog[512];
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+
+    if(!success)
+    {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+
+    // fragment shader
+
+    unsigned int fragmentShader;
+    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
+
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+
+    if(!success)
+    {
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+
+    // link all shader in shader program
+    shaderProgram = glCreateProgram();
+
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if(!success) {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+    }
+
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    glUseProgram(shaderProgram);
+
+
+    
 
     return SDL_APP_CONTINUE;
 }
 
 
 SDL_AppResult SDL_AppIterate(void *appstate){
+
+    glClear(GL_COLOR_BUFFER_BIT);
+    glUseProgram(shaderProgram);
+    myMesh->drawMesh( GL_TRIANGLES );
 
     // we have to swap the buffer to present
     SDL_GL_SwapWindow( mainWindow );
@@ -114,8 +212,9 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event){
             break;
         case SDL_EVENT_WINDOW_RESIZED:
 
-            SDL_GetWindowSize( mainWindow, &windowWidth, &windowHeight );
-            SDL_LogDebug( SDL_LOG_CATEGORY_APPLICATION, "   (%d %d) ", windowWidth, windowHeight );
+            SDL_GetWindowSizeInPixels( mainWindow, &windowWidth, &windowHeight );
+            glViewport(0, 0, windowWidth, windowHeight);
+            // SDL_LogDebug( SDL_LOG_CATEGORY_APPLICATION, "   (%d %d) ", windowWidth, windowHeight );
             
             break;
         case SDL_EVENT_QUIT:
@@ -130,6 +229,8 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event){
 void SDL_AppQuit(void *appstate, SDL_AppResult result){
 
     SDL_LogDebug( SDL_LOG_CATEGORY_APPLICATION, "Quitting..... " );
+
+    delete myMesh;
 
     SDL_GL_DestroyContext( mainContext );
     SDL_DestroyWindow( mainWindow ); 
