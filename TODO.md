@@ -1,0 +1,4 @@
+- [X] Mesh Class for rendering
+- [ ] Mesh importer
+- [ ] Mesh collection renderer
+- [ ] Somekind of shader manager
