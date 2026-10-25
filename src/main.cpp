@@ -11,7 +11,7 @@
 #include "Mesh.h"
 
 static SDL_Window *mainWindow = nullptr;
-static SDL_GLContext mainContext = nullptr; 
+static SDL_GLContext mainContext = nullptr;
 
 static int windowWidth = 800, windowHeight = 600;
 
@@ -31,21 +31,7 @@ Mesh* myMesh;
 
 static unsigned int shaderProgram;
 
-static const char *vertexShaderSource = "#version 450 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "}\0";
-
-static const char *fragmentShaderSource ="#version 450 core\n"
-    "out vec4 FragColor;\n"
-    "void main()\n"
-    "{\n"
-    "    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-    "}\0";
-
-bool SetGLAttribute( int majorVersion = 3, int minorVersion = 3 ){
+bool setGLAttribute( int majorVersion = 3, int minorVersion = 3 ){
     try {
         SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, majorVersion );
         SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, minorVersion );
@@ -63,18 +49,38 @@ bool SetGLAttribute( int majorVersion = 3, int minorVersion = 3 ){
     }
 }
 
+// TODO : load shader as a seperate program, then I might use that to combine to a pipeline object 
+// create GL_PROGRAM_SEPARABLE that contain compiled input shader 
+GLuint loadShaderFile( const char* file, GLenum shaderType ){
+    size_t fileSize_bytes;
+    unsigned int shader;
+    
+    // load shader file to const char*
+    void* fileBuffer = SDL_LoadFile( file, &fileSize_bytes );
+    if ( fileBuffer == nullptr ){
+        SDL_LogError( SDL_LOG_CATEGORY_SYSTEM, "Fail to load Shader file: %s", SDL_GetError());
+        SDL_Quit();
+    }
+    const char* shaderSource = static_cast<const char*>(fileBuffer);
+    
+    GLuint singleShaderProgram = glCreateShaderProgramv( shaderType, 1, &shaderSource);
+
+    return singleShaderProgram;
+}
+
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
 
     // Set Priority for all category 
     SDL_SetLogPriority( SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_DEBUG );
     SDL_SetLogPriority( SDL_LOG_CATEGORY_VIDEO, SDL_LOG_PRIORITY_DEBUG );
+    SDL_SetLogPriority( SDL_LOG_CATEGORY_SYSTEM, SDL_LOG_PRIORITY_DEBUG );
 
     if ( !SDL_Init( SDL_INIT_VIDEO ) ){
         SDL_LogError( SDL_LOG_CATEGORY_APPLICATION, "Fail to initialize SDL video subsystem: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
-    if( SetGLAttribute( 4, 5 ) ){
+    if( setGLAttribute( 4, 5 ) ){
         int majorVersion, minorVersion;
         SDL_GL_GetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, &majorVersion);
         SDL_GL_GetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, &minorVersion);
@@ -118,59 +124,17 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
 
     myMesh = new Mesh( vertices, indices );
 
-    unsigned int vertexShader;
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
+    // -----------------------------------------------------------------------------------------------------------
 
-    // check if shader compilation success
-
-    int  success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-
-    if(!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    // fragment shader
-
-    unsigned int fragmentShader;
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-
-    if(!success)
-    {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    // link all shader in shader program
-    shaderProgram = glCreateProgram();
-
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if(!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
-    glUseProgram(shaderProgram);
-
-
+    unsigned int vertexProgram = loadShaderFile( "shaders/vertex.glsl", GL_VERTEX_SHADER );
+    unsigned int fragmentProgram = loadShaderFile( "shaders/fragment.glsl", GL_FRAGMENT_SHADER );
     
+    unsigned int mainPipeline;
+    glGenProgramPipelines( 1, &mainPipeline );
+
+    glUseProgramStages( mainPipeline, GL_VERTEX_SHADER_BIT, vertexProgram);
+    glUseProgramStages( mainPipeline, GL_FRAGMENT_SHADER_BIT, fragmentProgram);
+    glBindProgramPipeline( mainPipeline );
 
     return SDL_APP_CONTINUE;
 }
