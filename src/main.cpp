@@ -9,27 +9,35 @@
 #include <vector>
 
 #include "Mesh.h"
+#include "Pipeline.h"
 
 static SDL_Window *mainWindow = nullptr;
 static SDL_GLContext mainContext = nullptr;
 
 static int windowWidth = 800, windowHeight = 600;
 
+// static std::vector<float> vertices = {
+//      0.5f,   0.5f,  0.0f,  // top right
+//      0.5f,  -0.5f,  0.0f,  // bottom right
+//     -0.5f,  -0.5f,  0.0f,  // bottom left
+//     -0.5f,   0.5f,  0.0f   // top left 
+// };
+
 static std::vector<float> vertices = {
-     0.5f,   0.5f,  0.0f,  // top right
-     0.5f,  -0.5f,  0.0f,  // bottom right
-    -0.5f,  -0.5f,  0.0f,  // bottom left
-    -0.5f,   0.5f,  0.0f   // top left 
+    // positions         // colors
+     0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
+    -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
+     0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
 };
 
 static std::vector<unsigned int> indices = {  // note that we start from 0!
-    0, 1, 3,  // first Triangle
-    1, 2, 3   // second Triangle
+    0, 1, 2,  // first Triangle
+    // 1, 2, 3   // second Triangle
 };
 
-Mesh* myMesh;
+static Pipeline* mainPipeline;
 
-static unsigned int shaderProgram;
+Mesh* myMesh;
 
 bool setGLAttribute( int majorVersion = 3, int minorVersion = 3 ){
     try {
@@ -47,25 +55,6 @@ bool setGLAttribute( int majorVersion = 3, int minorVersion = 3 ){
         SDL_LogError( SDL_LOG_CATEGORY_VIDEO, "Fail to set GL Attribute");
         return false;
     }
-}
-
-// TODO : load shader as a seperate program, then I might use that to combine to a pipeline object 
-// create GL_PROGRAM_SEPARABLE that contain compiled input shader 
-GLuint loadShaderFile( const char* file, GLenum shaderType ){
-    size_t fileSize_bytes;
-    unsigned int shader;
-    
-    // load shader file to const char*
-    void* fileBuffer = SDL_LoadFile( file, &fileSize_bytes );
-    if ( fileBuffer == nullptr ){
-        SDL_LogError( SDL_LOG_CATEGORY_SYSTEM, "Fail to load Shader file: %s", SDL_GetError());
-        SDL_Quit();
-    }
-    const char* shaderSource = static_cast<const char*>(fileBuffer);
-    
-    GLuint singleShaderProgram = glCreateShaderProgramv( shaderType, 1, &shaderSource);
-
-    return singleShaderProgram;
 }
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
@@ -124,17 +113,9 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
 
     myMesh = new Mesh( vertices, indices );
 
-    // -----------------------------------------------------------------------------------------------------------
+    mainPipeline = new Pipeline("shaders/vertex.glsl", "shaders/fragment.glsl" );
 
-    unsigned int vertexProgram = loadShaderFile( "shaders/vertex.glsl", GL_VERTEX_SHADER );
-    unsigned int fragmentProgram = loadShaderFile( "shaders/fragment.glsl", GL_FRAGMENT_SHADER );
-    
-    unsigned int mainPipeline;
-    glGenProgramPipelines( 1, &mainPipeline );
-
-    glUseProgramStages( mainPipeline, GL_VERTEX_SHADER_BIT, vertexProgram);
-    glUseProgramStages( mainPipeline, GL_FRAGMENT_SHADER_BIT, fragmentProgram);
-    glBindProgramPipeline( mainPipeline );
+    mainPipeline->bind();
 
     return SDL_APP_CONTINUE;
 }
@@ -143,7 +124,6 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
 SDL_AppResult SDL_AppIterate(void *appstate){
 
     glClear(GL_COLOR_BUFFER_BIT);
-    glUseProgram(shaderProgram);
     myMesh->drawMesh( GL_TRIANGLES );
 
     // we have to swap the buffer to present

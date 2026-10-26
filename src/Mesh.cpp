@@ -16,10 +16,16 @@ Mesh::Mesh( const std::vector<float>& vertices, const std::vector<unsigned int>&
     glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, EBO );
     glBufferData( GL_ELEMENT_ARRAY_BUFFER, indicesSize * sizeof(float), indices.data(), GL_STATIC_DRAW );
 
-    glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0 );
-    glEnableVertexAttribArray( 0 );
+    // glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0 );
+    // glEnableVertexAttribArray( 0 );
 
-    // glBindVertexArray( VAO );
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // color attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3* sizeof(float)));
+    glEnableVertexAttribArray(1);
+
 
 }
 
