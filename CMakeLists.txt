@@ -40,3 +40,9 @@ add_custom_command(TARGET Engine POST_BUILD
         "${CMAKE_SOURCE_DIR}/shaders"
         "$<TARGET_FILE_DIR:Engine>/shaders"
 )
+
+add_custom_command(TARGET Engine POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/images"
+        "$<TARGET_FILE_DIR:Engine>/images"
+)

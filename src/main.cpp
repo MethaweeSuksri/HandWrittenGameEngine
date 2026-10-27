@@ -32,8 +32,22 @@ static std::vector<float> vertices = {
 
 static std::vector<unsigned int> indices = {  // note that we start from 0!
     0, 1, 2,  // first Triangle
-    // 1, 2, 3   // second Triangle
+    // 1, 2, 3   // second Triangle 
 };
+
+static VertexLayout rainbowTriangle{
+    6 * sizeof(float),
+    {
+        { 0, 3, GL_FLOAT, GL_FALSE, (void*)0 },
+        { 1, 3, GL_FLOAT, GL_FALSE, (void*)(3* sizeof(float)) }
+    }
+};
+
+// static std::vector<float> texCoords = {
+//     0.0f, 0.0f,  // lower-left corner  
+//     1.0f, 0.0f,  // lower-right corner
+//     0.5f, 1.0f   // top-center corner
+// };
 
 static Pipeline* mainPipeline;
 
@@ -111,7 +125,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
     // TODO : read ts too
     SDL_GL_SetSwapInterval(1); // 1 = on, 0 = off, -1 = adaptive 
 
-    myMesh = new Mesh( vertices, indices );
+    myMesh = new Mesh( vertices, indices, rainbowTriangle );
 
     mainPipeline = new Pipeline("shaders/vertex.glsl", "shaders/fragment.glsl" );
 
