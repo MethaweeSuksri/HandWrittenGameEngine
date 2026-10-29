@@ -36,9 +36,9 @@ Mesh::Mesh( const std::vector<float>& vertices,
 }
 
 Mesh::~Mesh(){
-    // glDeleteVertexArrays( 1, VAO );
-    // glDeleteBuffers( 1, EBO );
-    // glDeleteBuffers( 1, VBO );
+    glDeleteVertexArrays( 1, &VAO );
+    glDeleteBuffers( 1, &EBO );
+    glDeleteBuffers( 1, &VBO );
 }
 
 void Mesh::drawMesh( GLenum mode​ ){

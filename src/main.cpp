@@ -10,6 +10,7 @@
 
 #include "Mesh.h"
 #include "Pipeline.h"
+#include "Texture.h"
 
 static SDL_Window *mainWindow = nullptr;
 static SDL_GLContext mainContext = nullptr;
@@ -23,23 +24,32 @@ static int windowWidth = 800, windowHeight = 600;
 //     -0.5f,   0.5f,  0.0f   // top left 
 // };
 
+// static std::vector<float> vertices = {
+//     // positions         // colors
+//      0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
+//     -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
+//      0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
+// };
+
 static std::vector<float> vertices = {
-    // positions         // colors
-     0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
-    -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
-     0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
+    // positions          // colors           // texture coords
+     0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+     0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+    -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+    -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
 };
 
 static std::vector<unsigned int> indices = {  // note that we start from 0!
-    0, 1, 2,  // first Triangle
-    // 1, 2, 3   // second Triangle 
+    0, 1, 3,  // first Triangle
+    1, 2, 3   // second Triangle 
 };
 
 static VertexLayout rainbowTriangle{
-    6 * sizeof(float),
+    8 * sizeof(float),
     {
         { 0, 3, GL_FLOAT, GL_FALSE, (void*)0 },
-        { 1, 3, GL_FLOAT, GL_FALSE, (void*)(3* sizeof(float)) }
+        { 1, 3, GL_FLOAT, GL_FALSE, (void*)(3* sizeof(float)) },
+        { 2, 2, GL_FLOAT, GL_FALSE, (void*)(6* sizeof(float)) }
     }
 };
 
@@ -52,6 +62,15 @@ static VertexLayout rainbowTriangle{
 static Pipeline* mainPipeline;
 
 Mesh* myMesh;
+
+Texture* texture;
+
+static std::vector<TextureParameter> textureParam{
+     {GL_TEXTURE_WRAP_S, GL_REPEAT},// set texture wrapping to GL_REPEAT (default wrapping method)
+    {GL_TEXTURE_WRAP_T, GL_REPEAT},
+    {GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR},
+    {GL_TEXTURE_MAG_FILTER, GL_LINEAR}
+};
 
 bool setGLAttribute( int majorVersion = 3, int minorVersion = 3 ){
     try {
@@ -127,9 +146,12 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
 
     myMesh = new Mesh( vertices, indices, rainbowTriangle );
 
+    texture = new Texture( "images/container.jpg", textureParam );
+
     mainPipeline = new Pipeline("shaders/vertex.glsl", "shaders/fragment.glsl" );
 
     mainPipeline->bind();
+
 
     return SDL_APP_CONTINUE;
 }
@@ -138,6 +160,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
 SDL_AppResult SDL_AppIterate(void *appstate){
 
     glClear(GL_COLOR_BUFFER_BIT);
+    texture->bind();
     myMesh->drawMesh( GL_TRIANGLES );
 
     // we have to swap the buffer to present
