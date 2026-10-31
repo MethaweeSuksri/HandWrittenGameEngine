@@ -6,6 +6,9 @@ Pipeline::Pipeline( const char* vertexFile, const char* fragmentFile )
       fragment_( fragmentFile, GL_FRAGMENT_SHADER )
 {
     glGenProgramPipelines( 1, &pipeline_ );
+
+    coordinateIndex_ = glGetUniformBlockIndex(vertex_.id(), "Matrices");   
+    glUniformBlockBinding(vertex_.id(), coordinateIndex_, 1);
     
     glUseProgramStages( pipeline_, GL_VERTEX_SHADER_BIT, vertex_.id());
     glUseProgramStages( pipeline_, GL_FRAGMENT_SHADER_BIT, fragment_.id());

@@ -12,6 +12,10 @@
 #include "Pipeline.h"
 #include "Texture.h"
 
+#include "glm/glm.hpp"
+#include <glm/mat4x4.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 static SDL_Window *mainWindow = nullptr;
 static SDL_GLContext mainContext = nullptr;
 
@@ -31,26 +35,38 @@ static int windowWidth = 800, windowHeight = 600;
 //      0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
 // };
 
-static std::vector<float> vertices = {
-    // positions          // colors           // texture coords
-     0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-     0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-    -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-    -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
-};
+// static std::vector<float> vertices = {
+//     // positions          // colors           // texture coords
+//      0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+//      0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+//     -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+//     -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
+// };
 
-static std::vector<unsigned int> indices = {  // note that we start from 0!
-    0, 1, 3,  // first Triangle
-    1, 2, 3   // second Triangle 
-};
+// static std::vector<unsigned int> indices = {  // note that we start from 0!
+//     0, 1, 3,  // first Triangle
+//     1, 2, 3   // second Triangle 
+// };
 
 static VertexLayout rainbowTriangle{
-    8 * sizeof(float),
+    5 * sizeof(float),
     {
         { 0, 3, GL_FLOAT, GL_FALSE, (void*)0 },
-        { 1, 3, GL_FLOAT, GL_FALSE, (void*)(3* sizeof(float)) },
-        { 2, 2, GL_FLOAT, GL_FALSE, (void*)(6* sizeof(float)) }
+        { 1, 2, GL_FLOAT, GL_FALSE, (void*)(3* sizeof(float)) },
+        // { 2, 2, GL_FLOAT, GL_FALSE, (void*)(6* sizeof(float)) }
     }
+};
+
+static std::vector<float> vertices = {
+    // positions          // texture coords
+         0.5f,  0.5f, 0.0f,   1.0f, 1.0f, // top right
+         0.5f, -0.5f, 0.0f,   1.0f, 0.0f, // bottom right
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, // bottom left
+        -0.5f,  0.5f, 0.0f,   0.0f, 1.0f  // top left 
+};
+static std::vector<unsigned int> indices = {
+    0, 1, 3, // first triangle
+    1, 2, 3  // second triangle
 };
 
 // static std::vector<float> texCoords = {
@@ -143,6 +159,27 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
     // Enable Vsync
     // TODO : read ts too
     SDL_GL_SetSwapInterval(1); // 1 = on, 0 = off, -1 = adaptive 
+
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f)); 
+
+    glm::mat4 view = glm::mat4(1.0f);
+    // note that we're translating the scene in the reverse direction of where we want to move
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f)); 
+    
+    glm::mat4 projection;
+    projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+    
+    GLuint UBO;
+    glGenBuffers( 1, &UBO );
+    glBindBuffer( GL_UNIFORM_BUFFER, UBO );
+    glBufferData( GL_UNIFORM_BUFFER, 192, NULL, GL_STATIC_DRAW);
+
+    glBindBufferBase(GL_UNIFORM_BUFFER, 1, UBO);
+
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, 64, &model);
+    glBufferSubData(GL_UNIFORM_BUFFER, 64, 64, &view);
+    glBufferSubData(GL_UNIFORM_BUFFER, 128, 64, &projection);
 
     myMesh = new Mesh( vertices, indices, rainbowTriangle );
 

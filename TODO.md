@@ -10,10 +10,12 @@ What we currently have is :
     ├── input
     └── cleanup
 
+- [X] add glm
+- [ ] uniform setter in pipeline class
 - [ ] Mesh importer
+- [ ] coordinate system
 - [ ] Mesh collection renderer
-- [ ] Somekind of shader manager
-
+- [ ] camera system + movement ( get input from sdl3)
 
 Cpp Core Guideline to read:
     - [ ] P — Philosophy

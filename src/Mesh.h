@@ -17,13 +17,13 @@ struct VertexLayout{
 
 class Mesh{
     private:
-        unsigned int VAO = 0;
-        unsigned int VBO = 0;
-        unsigned int EBO = 0;
-        unsigned int indicesSize = 0;
+        GLuint VAO = 0;
+        GLuint VBO = 0;
+        GLuint EBO = 0;
+        GLsizei indexCount = 0;
         
     public:
-        Mesh( const std::vector<float>& vertices, const std::vector<unsigned int>& indices, VertexLayout& layout );
+        Mesh( const std::vector<float>& vertices, const std::vector<unsigned int>& indices, const VertexLayout& layout );
         ~Mesh();
         void drawMesh( GLenum mode​ );
 

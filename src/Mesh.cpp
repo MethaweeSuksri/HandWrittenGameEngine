@@ -2,9 +2,9 @@
 
 Mesh::Mesh( const std::vector<float>& vertices, 
             const std::vector<unsigned int>& indices,
-            VertexLayout& layout ){
+            const VertexLayout& layout ){
 
-    indicesSize = indices.size();
+    indexCount = indices.size();
 
     // for easy comprehension of the buffer, we'll define vertex array object (VAO) first
     glGenVertexArrays(1, &VAO);    
@@ -12,7 +12,7 @@ Mesh::Mesh( const std::vector<float>& vertices,
     
     glGenBuffers(1, &VBO);
     glBindBuffer( GL_ARRAY_BUFFER, VBO );
-    glBufferData( GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW );
+    glBufferData( GL_ARRAY_BUFFER, vertices.size() * sizeof(vertices[0]), vertices.data(), GL_STATIC_DRAW );
     
     for ( VertexAttribute attribute : layout.attributes ){
         glVertexAttribPointer(  attribute.locationIndex, 
@@ -28,11 +28,10 @@ Mesh::Mesh( const std::vector<float>& vertices,
     
     glGenBuffers(1, &EBO);
     glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, EBO );
-    glBufferData( GL_ELEMENT_ARRAY_BUFFER, indicesSize * sizeof(indices[0]), indices.data(), GL_STATIC_DRAW );
+    glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(indices[0]), indices.data(), GL_STATIC_DRAW );
     
     glBindBuffer( GL_ARRAY_BUFFER, 0 );
     glBindVertexArray( 0 );
-    glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 }
 
 Mesh::~Mesh(){
@@ -41,7 +40,7 @@ Mesh::~Mesh(){
     glDeleteBuffers( 1, &VBO );
 }
 
-void Mesh::drawMesh( GLenum mode​ ){
+void Mesh::drawMesh( GLenum mode ){
     glBindVertexArray( VAO );
-    glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
+    glDrawElements( mode, indexCount, GL_UNSIGNED_INT, 0);
 }

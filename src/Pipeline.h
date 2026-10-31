@@ -18,4 +18,5 @@ class Pipeline{
         GLuint pipeline_ = 0;
         ShaderProgram vertex_;
         ShaderProgram fragment_;
+        GLuint coordinateIndex_;
 };
