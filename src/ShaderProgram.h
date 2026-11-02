@@ -7,7 +7,7 @@ class ShaderProgram{
         ~ShaderProgram();
         
         GLuint id();
-        GLint getUniformLocation(const char* name) const;
+        // GLint getUniformLocation(const char* name) const;
 
     private:
         GLuint program_ = 0;

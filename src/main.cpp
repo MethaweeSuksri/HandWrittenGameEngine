@@ -11,6 +11,7 @@
 #include "Mesh.h"
 #include "Pipeline.h"
 #include "Texture.h"
+#include "UniformBuffer.h"
 
 #include "glm/glm.hpp"
 #include <glm/mat4x4.hpp>
@@ -81,6 +82,8 @@ Mesh* myMesh;
 
 Texture* texture;
 
+UniformBuffer* myUniformBuffer;
+
 static std::vector<TextureParameter> textureParam{
      {GL_TEXTURE_WRAP_S, GL_REPEAT},// set texture wrapping to GL_REPEAT (default wrapping method)
     {GL_TEXTURE_WRAP_T, GL_REPEAT},
@@ -149,6 +152,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
     }
     
     glDisable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);  
     glViewport(0, 0, windowWidth, windowHeight );
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
@@ -170,25 +174,24 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
     glm::mat4 projection;
     projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
     
-    GLuint UBO;
-    glGenBuffers( 1, &UBO );
-    glBindBuffer( GL_UNIFORM_BUFFER, UBO );
-    glBufferData( GL_UNIFORM_BUFFER, 192, NULL, GL_STATIC_DRAW);
+    myUniformBuffer = new UniformBuffer( 192 );
+    myUniformBuffer->bufferSubData(0, 64, &model);
+    myUniformBuffer->bufferSubData(64, 64, &view);
+    myUniformBuffer->bufferSubData(128, 64, &projection);
 
-    glBindBufferBase(GL_UNIFORM_BUFFER, 1, UBO);
-
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, 64, &model);
-    glBufferSubData(GL_UNIFORM_BUFFER, 64, 64, &view);
-    glBufferSubData(GL_UNIFORM_BUFFER, 128, 64, &projection);
-
+    
+    // glBufferSubData(GL_UNIFORM_BUFFER, 0, 64, &model);
+    // glBufferSubData(GL_UNIFORM_BUFFER, 64, 64, &view);
+    // glBufferSubData(GL_UNIFORM_BUFFER, 128, 64, &projection);
+    
     myMesh = new Mesh( vertices, indices, rainbowTriangle );
-
+    
     texture = new Texture( "images/container.jpg", textureParam );
-
+    
     mainPipeline = new Pipeline("shaders/vertex.glsl", "shaders/fragment.glsl" );
+    myUniformBuffer->bindUniformBlockToProgram( mainPipeline->vertex_,"Matrices");
 
     mainPipeline->bind();
-
 
     return SDL_APP_CONTINUE;
 }
@@ -196,7 +199,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
 
 SDL_AppResult SDL_AppIterate(void *appstate){
 
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     texture->bind();
     myMesh->drawMesh( GL_TRIANGLES );
 
