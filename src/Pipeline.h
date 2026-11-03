@@ -12,8 +12,8 @@ class Pipeline{
         Pipeline( const char* vertexFile, const char* fragmentFile );
         ~Pipeline();
         void bind();
-        ShaderProgram vertex_;
-        ShaderProgram fragment_;
+        ShaderProgram vertex;
+        ShaderProgram fragment;
     
     private:
         GLuint pipeline_ = 0;

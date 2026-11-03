@@ -12,6 +12,7 @@
 #include "Pipeline.h"
 #include "Texture.h"
 #include "UniformBuffer.h"
+#include "Camera.h"
 
 #include "glm/glm.hpp"
 #include <glm/mat4x4.hpp>
@@ -83,6 +84,8 @@ Mesh* myMesh;
 Texture* texture;
 
 UniformBuffer* myUniformBuffer;
+
+Camera* myCamera;
 
 static std::vector<TextureParameter> textureParam{
      {GL_TEXTURE_WRAP_S, GL_REPEAT},// set texture wrapping to GL_REPEAT (default wrapping method)
@@ -167,9 +170,11 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f)); 
 
-    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 view;
     // note that we're translating the scene in the reverse direction of where we want to move
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f)); 
+    // view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+    myCamera = new Camera( glm::vec3(0.0, 0.0, 3.0) , glm::vec3(0.0, 0.0, 0.0) );
+    myCamera->getLookAt( view );
     
     glm::mat4 projection;
     projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
@@ -189,7 +194,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
     texture = new Texture( "images/container.jpg", textureParam );
     
     mainPipeline = new Pipeline("shaders/vertex.glsl", "shaders/fragment.glsl" );
-    myUniformBuffer->bindUniformBlockToProgram( mainPipeline->vertex_,"Matrices");
+    myUniformBuffer->bindUniformBlockToProgram( mainPipeline->vertex, "Matrices" );
 
     mainPipeline->bind();
 
