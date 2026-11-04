@@ -2,9 +2,10 @@
 
 #define UNIVERSAL_UP glm::vec3(0.0f, 1.0f, 0.0f)
 
-Camera::Camera( glm::vec3 position, glm::vec3 target )
+Camera::Camera( glm::vec3 position, glm::vec3 target, Fustrum fustrum )
     : position( position ),
-      target( target )
+      target( target ),
+      fustrum( fustrum )
 {
     updateCameraDerivedData();
 }
@@ -29,10 +30,19 @@ void Camera::updateTarget( glm::vec3 newTarget ){
     updateCameraDerivedData();
 }
 
-void Camera::getLookAt( glm::mat4& lookAt ){
+void Camera::getView( glm::mat4& lookAt ) const {
     lookAt = glm::lookAt(   position,
                             target,
                             UNIVERSAL_UP );
+}
+
+void Camera::getProjection( glm::mat4& projection ) const {
+    projection = glm::perspective(
+        fustrum.fovY_radians,
+        fustrum.aspect,
+        fustrum.zNear,
+        fustrum.zFar
+    );
 }
 
 

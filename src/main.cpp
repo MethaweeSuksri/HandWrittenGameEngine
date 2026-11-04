@@ -13,6 +13,8 @@
 #include "Texture.h"
 #include "UniformBuffer.h"
 #include "Camera.h"
+#include "Scene.h"
+#include "Renderer.h"
 
 #include "glm/glm.hpp"
 #include <glm/mat4x4.hpp>
@@ -79,6 +81,10 @@ static std::vector<unsigned int> indices = {
 
 static Pipeline* mainPipeline;
 
+static Scene mainScene{};
+
+static RenderObject renderObject;
+
 Mesh* myMesh;
 
 Texture* texture;
@@ -87,8 +93,14 @@ UniformBuffer* myUniformBuffer;
 
 Camera* myCamera;
 
+Renderer* renderer;
+
+Fustrum cameraFustrum = {
+    glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f
+};
+
 static std::vector<TextureParameter> textureParam{
-     {GL_TEXTURE_WRAP_S, GL_REPEAT},// set texture wrapping to GL_REPEAT (default wrapping method)
+    {GL_TEXTURE_WRAP_S, GL_REPEAT},// set texture wrapping to GL_REPEAT (default wrapping method)
     {GL_TEXTURE_WRAP_T, GL_REPEAT},
     {GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR},
     {GL_TEXTURE_MAG_FILTER, GL_LINEAR}
@@ -138,7 +150,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
         SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
 
     if ( !mainWindow ) {
-        SDL_LogError( SDL_LOG_CATEGORY_APPLICATION, "Fail to create window/renderer: %s", SDL_GetError());
+        SDL_LogError( SDL_LOG_CATEGORY_APPLICATION, "Fail to create window: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
@@ -154,6 +166,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
         return SDL_APP_FAILURE;
     }
     
+    // TODO : should be in some kind of renderer class 
     glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);  
     glViewport(0, 0, windowWidth, windowHeight );
@@ -167,36 +180,35 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
     // TODO : read ts too
     SDL_GL_SetSwapInterval(1); // 1 = on, 0 = off, -1 = adaptive 
 
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f)); 
-
-    glm::mat4 view;
     // note that we're translating the scene in the reverse direction of where we want to move
     // view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-    myCamera = new Camera( glm::vec3(0.0, 0.0, 3.0) , glm::vec3(0.0, 0.0, 0.0) );
-    myCamera->getLookAt( view );
+    myCamera = new Camera( glm::vec3(0.0, 0.0, 3.0) , glm::vec3(0.0, 0.0, 0.0), cameraFustrum );
     
-    glm::mat4 projection;
-    projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
-    
-    myUniformBuffer = new UniformBuffer( 192 );
-    myUniformBuffer->bufferSubData(0, 64, &model);
-    myUniformBuffer->bufferSubData(64, 64, &view);
-    myUniformBuffer->bufferSubData(128, 64, &projection);
+    renderObject.mesh = new Mesh( vertices, indices, rainbowTriangle );
+    renderObject.pipeline = new Pipeline("shaders/vertex.glsl", "shaders/fragment.glsl" );
+    renderObject.texture = new Texture( "images/container.jpg", textureParam );
+    renderObject.inWorldState = {
+        glm::vec3(0.0f),
+        glm::vec3(-55.0f, 0.0f, 0.0f),
+        glm::vec3(1.0f)
+    };
 
+    mainScene.objects.push_back(renderObject);
+
+    renderer = new Renderer();
     
+    // myUniformBuffer = new UniformBuffer( 192 );
+    // myUniformBuffer->bufferSubData(0, 64, &model);
+    // myUniformBuffer->bufferSubData(64, 64, &view);
+    // myUniformBuffer->bufferSubData(128, 64, &projection);
+
     // glBufferSubData(GL_UNIFORM_BUFFER, 0, 64, &model);
     // glBufferSubData(GL_UNIFORM_BUFFER, 64, 64, &view);
     // glBufferSubData(GL_UNIFORM_BUFFER, 128, 64, &projection);
-    
-    myMesh = new Mesh( vertices, indices, rainbowTriangle );
-    
-    texture = new Texture( "images/container.jpg", textureParam );
-    
-    mainPipeline = new Pipeline("shaders/vertex.glsl", "shaders/fragment.glsl" );
-    myUniformBuffer->bindUniformBlockToProgram( mainPipeline->vertex, "Matrices" );
 
-    mainPipeline->bind();
+    // myUniformBuffer->bindUniformBlockToProgram( mainPipeline->vertex, "Matrices" );
+
+    // mainPipeline->bind();
 
     return SDL_APP_CONTINUE;
 }
@@ -205,8 +217,9 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv){
 SDL_AppResult SDL_AppIterate(void *appstate){
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    texture->bind();
-    myMesh->drawMesh( GL_TRIANGLES );
+    // texture->bind();
+    // myMesh->drawMesh( GL_TRIANGLES );
+    renderer->render( *myCamera, mainScene );
 
     // we have to swap the buffer to present
     SDL_GL_SwapWindow( mainWindow );
