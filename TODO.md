@@ -10,12 +10,15 @@ What we currently have is :
     ├── input
     └── cleanup
 
+Next Task = update function that update the scene/ camera on deltatime + input
+
 - [X] add glm
-- [ ] uniform setter in pipeline class
+- [X] uniform setter in pipeline class
 - [ ] Mesh importer
-- [ ] coordinate system
-- [ ] Mesh collection renderer
+- [X] coordinate system
+- [X] Mesh collection renderer
 - [ ] camera system + movement ( get input from sdl3)
+- [ ] choose and apply code convention, especially on how to pass data between class 
 
 Cpp Core Guideline to read:
     - [ ] P — Philosophy

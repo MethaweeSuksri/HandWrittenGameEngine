@@ -3,6 +3,7 @@
 void Renderer::render( const Camera& camera, const Scene& scene ){
     for ( auto& object : scene.objects ){
 
+        // TODO : fix inconsistance on how to return data on 3 of these function.
         glm::mat4 model = object.getInWorldMatrix();
         glm::mat4 view;
         glm::mat4 projection;

@@ -24,13 +24,20 @@ class Camera{
         void getView( glm::mat4& lookAt ) const ;
         void getProjection( glm::mat4& projection ) const ;
 
+        // camera movement
+        void moveForward( float scale );
+        void moveRight( float scale );
+        void moveUp( float scale);
+
+        // camera yaw and pitch base on delta mouse position by time ( no roll ) + try to use quarternion
+
     private:
         // main 
         glm::vec3 position;
         glm::vec3 target;
 
         // derived
-        glm::vec3 direction;
+        glm::vec3 forward;
         glm::vec3 up;
         glm::vec3 right;
 };

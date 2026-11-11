@@ -15,9 +15,9 @@ Camera::~Camera(){
 }
 
 void Camera::updateCameraDerivedData(){
-    direction = glm::normalize( position - target );
-    right = glm::normalize( glm::cross( UNIVERSAL_UP, direction ) );
-    up = glm::normalize( glm::cross( direction, right ) );
+    forward = glm::normalize( target - position );
+    right = glm::normalize( glm::cross( forward, UNIVERSAL_UP ) );
+    up = glm::normalize( glm::cross( right, forward ) );
 }
 
 void Camera::updatePosition( glm::vec3 newPosition ){
